@@ -1,6 +1,11 @@
 ![banner](.images/banner-dark-theme.png#gh-dark-mode-only)
 ![banner](.images/banner-light-theme.png#gh-light-mode-only)
 
+# Disclaimer 
+
+This is a forked version of the original uROS repository for STM32CubeMX/IDE. Modifications have been made to ease the setup and configuration process. 
+colcon.meta has been configured to run on an STM32 chip with 20kb RAM and 64kb flash. 
+
 # micro-ROS for STM32CubeMX/IDE
 
 This tool aims to ease the micro-ROS integration in a STM32CubeMX/IDE project.
@@ -13,7 +18,6 @@ This tool aims to ease the micro-ROS integration in a STM32CubeMX/IDE project.
     - [U(S)ART with Interrupts](#usart-with-interrupts)
   - [Customizing the micro-ROS library](#customizing-the-micro-ros-library)
   - [Adding custom packages](#adding-custom-packages)
-  - [Using this package with STM32CubeIDE](#using-this-package-with-stm32cubeide)
   - [Purpose of the Project](#purpose-of-the-project)
   - [License](#license)
   - [Known Issues/Limitations](#known-issueslimitations)
@@ -25,15 +29,12 @@ This package support the usage of micro-ROS on top of two different middlewares:
 
 ## Using this package with STM32CubeMX
 
-1. Clone this repository in your STM32CubeMX project folder. A sample project can be generated with the provided `sample_project.ioc`.
+1. Clone this repository in your STM32CubeMX project folder. 
 2. Make sure that your STM32CubeMX project is using a `Makefile` toolchain under `Project Manager -> Project`
-3. Make sure that if you are using FreeRTOS, the micro-ROS task **has more than 10 kB of stack**: [Detail](.images/Set_freertos_stack.jpg)
+3. Depending on your use case, you can configure Micro XRCE-DDS to vary how much memory is required in the micro-ros task. 
 4. Configure the transport interface on the STM32CubeMX project, check the [Transport configuration](#Transport-configuration) section for instructions on the custom transports provided.
 5. Modify the generated `Makefile` to include the following code **before the `build the application` section**:
 
-<!-- # Removing heap4 manager while being polite with STM32CubeMX
-TMPVAR := $(C_SOURCES)
-C_SOURCES := $(filter-out Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/heap_4.c, $(TMPVAR)) -->
 
 ```makefile
 #######################################
@@ -62,7 +63,7 @@ docker pull microros/micro_ros_static_library_builder:foxy
 docker run -it --rm -v $(pwd):/project --env MICROROS_LIBRARY_FOLDER=micro_ros_stm32cubemx_utils/microros_static_library microros/micro_ros_static_library_builder:foxy
 ```
 
-1. Modify your `main.c` to use micro-ROS. An example application can be found in `sample_main.c`.
+1. Modify your `freertos.c` to use micro-ROS. An example application can be found in `sample_main.c`.
 2. Continue your usual workflow building your project and flashing the binary:
 
 ```bash
@@ -88,33 +89,10 @@ Steps to configure:
 ## Customizing the micro-ROS library
 
 All the micro-ROS configuration can be done in `colcon.meta` file before step 3. You can find detailed information about how to tune the static memory usage of the library in the [Middleware Configuration tutorial](https://micro.ros.org/docs/tutorials/core/microxrcedds_rmw_configuration/).
+
 ## Adding custom packages
 
 Note that folders added to `microros_static_library/library_generation/extra_packages/` and entries added to `/microros_static_library/library_generation/extra_packages/extra_packages.repos` will be taken into account by this build system.
-
-## Using this package with STM32CubeIDE
-
-micro-ROS can be used with SMT32CubeIDE following these steps:
-
-1. Clone this repository in your STM32CubeIDE project folder
-2. Go to `Project -> Settings -> C/C++ Build -> Settings -> Build Steps Tab` and in `Pre-build steps` add:
-
-```bash
-docker pull microros/micro_ros_static_library_builder:foxy && docker run --rm -v ${workspace_loc:/${ProjName}}:/project --env MICROROS_LIBRARY_FOLDER=micro_ros_stm32cubemx_utils/microros_static_library_ide microros/micro_ros_static_library_builder:foxy
-```
-
-3. Add micro-ROS include directory. In `Project -> Settings -> C/C++ Build -> Settings -> Tool Settings Tab -> MCU GCC Compiler -> Include paths` add `micro_ros_stm32cubemx_utils/microros_static_library_ide/libmicroros/include`
-4. Add the micro-ROS precompiled library. In `Project -> Settings -> C/C++ Build -> Settings -> MCU GCC Linker -> Libraries`
-      - add `<ABSOLUTE_PATH_TO>/micro_ros_stm32cubemx_utils/microros_static_library_ide/libmicroros` in `Library search path (-L)`
-      - add `microros` in `Libraries (-l)`
-5. Add the following source code files to your project, dragging them to source folder:
-      - `extra_sources/microros_time.c`
-      - `extra_sources/microros_allocators.c`
-      - `extra_sources/custom_memory_manager.c`
-      - `extra_sources/microros_transports/dma_transport.c` or your transport selection.
-6. Make sure that if you are using FreeRTOS, the micro-ROS task **has more than 10 kB of stack**: [Detail](.images/Set_freertos_stack.jpg)
-7. Configure the transport interface on the STM32CubeMX project, check the [Transport configuration](#Transport-configuration) section for instructions on the custom transports provided.
-8. Build and run your project
 
 ## Purpose of the Project
 
